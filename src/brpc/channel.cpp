@@ -322,6 +322,7 @@ int Channel::InitSingle(const butil::EndPoint& server_addr_and_port,
 int Channel::Init(const char* ns_url,
                   const char* lb_name,
                   const ChannelOptions* options) {
+    LOG(INFO) << "Init channel to hostname: " << ns_url;
     if (lb_name == NULL || *lb_name == '\0') {
         // Treat ns_url as server_addr_and_port
         return Init(ns_url, options);

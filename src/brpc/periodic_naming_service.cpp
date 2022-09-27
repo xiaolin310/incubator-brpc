@@ -25,7 +25,7 @@
 
 namespace brpc {
 
-DEFINE_int32(ns_access_interval, 5,
+DEFINE_int32(ns_access_interval, 20,
              "Wait so many seconds before next access to naming service");
 BRPC_VALIDATE_GFLAG(ns_access_interval, PositiveInteger);
 
@@ -40,6 +40,8 @@ int PeriodicNamingService::RunNamingService(
     for (;;) {
         servers.clear();
         const int rc = GetServers(service_name, &servers);
+        LOG(INFO) << "GetServers(" << service_name << ") returns rc: " << rc
+                  << ", servers size: " << servers.size();
         if (rc == 0) {
             ever_reset = true;
             actions->ResetServers(servers);

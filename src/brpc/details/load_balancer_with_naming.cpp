@@ -30,6 +30,7 @@ LoadBalancerWithNaming::~LoadBalancerWithNaming() {
 int LoadBalancerWithNaming::Init(const char* ns_url, const char* lb_name,
                                  const NamingServiceFilter* filter,
                                  const GetNamingServiceThreadOptions* options) {
+    LOG(INFO) << "LoadBalancerWithNaming::Init";
     if (SharedLoadBalancer::Init(lb_name) != 0) {
         return -1;
     }

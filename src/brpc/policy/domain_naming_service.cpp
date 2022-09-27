@@ -125,11 +125,13 @@ int DomainNamingService::GetServers(const char* dns_name,
     //TODO add protocols other than IPv4 supports
     butil::EndPoint point;
     point.port = port;
+    LOG(INFO) << "hostname " << dns_name << " lookup result: ";
     for (int i = 0; result->h_addr_list[i] != NULL; ++i) {
         if (result->h_addrtype == AF_INET) {
             // Only fetch IPv4 addresses
             bcopy(result->h_addr_list[i], &point.ip, result->h_length);
             servers->push_back(ServerNode(point, std::string()));
+            LOG(INFO) << "ip: " << point.ip;
         } else {
             LOG(WARNING) << "Found address of unsupported protocol="
                          << result->h_addrtype;

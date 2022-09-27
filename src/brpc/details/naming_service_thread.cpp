@@ -201,23 +201,31 @@ void NamingServiceThread::Actions::ResetServers(
         }
         LOG(INFO) << info.str();
     }
-
+    LOG(INFO) << "EndWait, servers.empty()? " << servers.empty();
     EndWait(servers.empty() ? ENODATA : 0);
 }
 
 void NamingServiceThread::Actions::EndWait(int error_code) {
-    if (bthread_id_trylock(_wait_id, NULL) == 0) {
+    LOG(INFO) << "bthread_id_trylock on _wait_id: " << _wait_id;
+    int res = bthread_id_trylock(_wait_id, NULL);
+    LOG(INFO) << "bthread_id_trylock on _wait_id: " << _wait_id << " return value: " << res;
+    if (res == 0) {
         _wait_error = error_code;
         _has_wait_error.store(true, butil::memory_order_release);
-        bthread_id_unlock_and_destroy(_wait_id);
+        LOG(INFO) << "bthread_id_unlock_and_destroy _wait_id: " << _wait_id;
+        res = bthread_id_unlock_and_destroy(_wait_id);
+        LOG(INFO) << "bthread_id_unlock_and_destroy _wait_id: " << _wait_id << "return value: " << res;
     }
 }
 
 int NamingServiceThread::Actions::WaitForFirstBatchOfServers() {
     // Wait can happen before signal in which case it returns non-zero,
     // so we ignore return value here and use `_wait_error' instead
+    LOG(INFO) << "_has_wait_error: " << _has_wait_error.load(butil::memory_order_acquire)
+              << ", _wait_error: " << _wait_error << ", _wait_id: " << _wait_id;
     if (!_has_wait_error.load(butil::memory_order_acquire)) {
         bthread_id_join(_wait_id);
+        LOG(INFO) << "bthread_id_join returns";
     }
     return _wait_error;
 }
@@ -299,7 +307,9 @@ int NamingServiceThread::Start(NamingService* naming_service,
 }
 
 int NamingServiceThread::WaitForFirstBatchOfServers() {
+    LOG(INFO) << "start WaitForFirstBatchOfServers";
     int rc = _actions.WaitForFirstBatchOfServers();
+    LOG(INFO) << "WaitForFirstBatchOfServers returns";
     if (rc == ENODATA && _options.succeed_without_server) {
         if (_options.log_succeed_without_server) {
             LOG(WARNING) << '`' << *this << "' is empty! RPC over the channel"
@@ -467,6 +477,7 @@ int GetNamingServiceThread(
             new_thread = true;
         }
     }
+    LOG(INFO) << "new ns thread: " << new_thread;
     if (new_thread) {
         if (nsthread->Start(source_ns->New(), key.protocol, key.service_name, options) != 0) {
             LOG(ERROR) << "Fail to start NamingServiceThread";
